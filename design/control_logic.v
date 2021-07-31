@@ -32,6 +32,7 @@ output reg o_mac_mode,
 output reg [$clog2(WIDTH)-1:0] o_mac_row_column_pointer,
 output reg [$clog2(WIDTH)-1:0] o_mac_pixel_pointer,
 output reg [7:0] axi_out,
+output reg axi_valid,
 input i_mac_mode,
 input [$clog2(WIDTH)-1:0] i_mac_row_column_pointer,
 input [$clog2(WIDTH)-1:0] i_mac_pixel_pointer    
@@ -51,7 +52,7 @@ wire [7:0] mem2_out1;
 wire [7:0] mem2_out2;
 wire [15:0] mem_out;
 reg [15:0] mem_in;
-reg mode;  // 0 = row wise, 1 = column wise
+reg mode;
 reg [$clog2(WIDTH)-1:0] pixel_pointer;
 reg [$clog2(WIDTH)-1:0] row_column_pointer;
 reg read;
@@ -148,7 +149,10 @@ always @ (posedge clk) begin
 end
 
 always @ (posedge clk) begin
-    if ( level == DECOMPOSITION_LEVEL ) begin
+    if (rst)
+        axi_valid <= 0;
+    else if ( level == DECOMPOSITION_LEVEL ) begin
+        axi_valid <= 1;
         axi_out <= mem1_out1;
         if (pixel_pointer == WIDTH - 2) begin
             pixel_pointer <= 0;
@@ -188,3 +192,4 @@ img_memory mem2(
     );          
           
 endmodule
+
