@@ -51,7 +51,7 @@ wire [7:0] mem2_out1;
 wire [7:0] mem2_out2;
 wire [15:0] mem_out;
 reg [15:0] mem_in;
-reg mode;
+reg mode;  // 0 = row wise, 1 = column wise
 reg [$clog2(WIDTH)-1:0] pixel_pointer;
 reg [$clog2(WIDTH)-1:0] row_column_pointer;
 reg read;
