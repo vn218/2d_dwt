@@ -107,10 +107,12 @@ assign rd_addr2 = mode? (pixel_pointer+1)*WIDTH + row_column_pointer : row_colum
 
 
 
-assign o_mac_mode = mode;
-assign o_mac_row_column_pointer = row_column_pointer;
-assign o_mac_pixel_pointer = pixel_pointer;
-assign o_mac_valid = read;
+always @ (posedge clk) begin
+    o_mac_mode <= mode;
+    o_mac_row_column_pointer <= row_column_pointer;
+    o_mac_pixel_pointer <= pixel_pointer;
+    o_mac_valid <= read;
+end
 
 assign w_addr1 = i_mac_mode? (i_mac_pixel_pointer/2)*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2;
 assign w_addr2 = i_mac_mode? (i_mac_pixel_pointer/2 + HEIGHT/(2*dividend))*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2 + WIDTH/(2*dividend);
