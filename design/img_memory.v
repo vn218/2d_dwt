@@ -19,10 +19,11 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
  
-parameter HEIGHT = 256,
-          WIDTH = 256;
  
-module img_memory(
+module img_memory
+#(parameter HEIGHT = 256,
+            WIDTH =256)
+(
 input [7:0] pixel_in1,
 input [7:0] pixel_in2,
 output reg [7:0] pixel_out1,
@@ -31,12 +32,12 @@ input enable1,
 input wr_enable1,
 input enable2,
 input wr_enable2,
-input [HEIGHT*WIDTH-1:0] addr1,
-input [HEIGHT*WIDTH-1:0] addr2,
+input [$clog2(HEIGHT*WIDTH)-1:0] addr1,
+input [$clog2(HEIGHT*WIDTH)-1:0] addr2,
 input clk
     );
    
-    
+        
     reg [7:0] mem [HEIGHT*WIDTH-1:0];
     
     initial begin
