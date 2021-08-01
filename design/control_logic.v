@@ -59,6 +59,7 @@ reg [$clog2(WIDTH)-1:0] row_column_pointer;
 reg read;
 reg [2:0] level;
 reg [7:0] dividend;
+reg axi_valid_buffer;
 
 assign memory_select = mode;
 assign mem_out = memory_select?{mem2_out1,mem2_out2}:{mem1_out1,mem1_out2};
@@ -145,10 +146,13 @@ always @ (posedge clk) begin
 end
 
 always @ (posedge clk) begin
-    if (rst)
+    if (rst) begin
         axi_valid <= 0;
+        axi_valid_buffer <= 0;
+    end    
     else if ( level == DECOMPOSITION_LEVEL ) begin
-        axi_valid <= 1;
+        axi_valid_buffer <= 1;
+        axi_valid <= axi_valid_buffer;
         axi_out <= mem1_out1;
         if (pixel_pointer == WIDTH - 1) begin
             pixel_pointer <= 0;
