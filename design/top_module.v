@@ -34,8 +34,6 @@ wire [15:0] pixel_to_mac;
 wire [15:0] pixel_from_mac;
 wire valid_to_mac;
 wire valid_from_mac;
-wire mode_to_mac;
-wire mode_from_mac;
 wire [$clog2(WIDTH)-1:0] row_column_pointer_to_mac;
 wire [$clog2(WIDTH)-1:0] pixel_pointer_to_mac;    
 wire [$clog2(WIDTH)-1:0] row_column_pointer_from_mac;
@@ -52,12 +50,10 @@ control_logic(
 .i_mac_valid(valid_from_mac),
 .o_mac(pixel_to_mac),
 .o_mac_valid(valid_to_mac),
-.o_mac_mode(mode_to_mac),
 .o_mac_row_column_pointer(row_column_pointer_to_mac),
 .o_mac_pixel_pointer(pixel_pointer_to_mac),
 .axi_out(axi_out),
 .axi_valid(axi_valid),
-.i_mac_mode(mode_from_mac),
 .i_mac_row_column_pointer(row_column_pointer_from_mac),
 .i_mac_pixel_pointer(pixel_pointer_from_mac)    
     );
@@ -71,10 +67,8 @@ mac(
 .pixel_output(pixel_from_mac),
 .i_valid(valid_to_mac),
 .o_valid(valid_from_mac),
-.i_mode(mode_to_mac),
 .i_row_column_pointer(row_column_pointer_to_mac),
 .i_pixel_pointer(pixel_pointer_to_mac),
-.o_mode(mode_from_mac),
 .o_row_column_pointer(row_column_pointer_from_mac),
 .o_pixel_pointer(pixel_pointer_from_mac)
     );    
