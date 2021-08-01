@@ -29,12 +29,10 @@ input [15:0] i_mac,
 input i_mac_valid,
 output [15:0] o_mac,
 output reg o_mac_valid,
-output reg o_mac_mode,
 output reg [$clog2(WIDTH)-1:0] o_mac_row_column_pointer,
 output reg [$clog2(WIDTH)-1:0] o_mac_pixel_pointer,
 output reg [7:0] axi_out,
 output reg axi_valid,
-input i_mac_mode,
 input [$clog2(WIDTH)-1:0] i_mac_row_column_pointer,
 input [$clog2(WIDTH)-1:0] i_mac_pixel_pointer    
     );
@@ -108,14 +106,13 @@ assign rd_addr2 = mode? (pixel_pointer+1)*WIDTH + row_column_pointer : row_colum
 
 
 always @ (posedge clk) begin
-    o_mac_mode <= mode;
     o_mac_row_column_pointer <= row_column_pointer;
     o_mac_pixel_pointer <= pixel_pointer;
     o_mac_valid <= read;
 end
 
-assign w_addr1 = i_mac_mode? (i_mac_pixel_pointer/2)*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2;
-assign w_addr2 = i_mac_mode? (i_mac_pixel_pointer/2 + HEIGHT/(2*divisor))*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2 + WIDTH/(2*divisor);
+assign w_addr1 = mode? (i_mac_pixel_pointer/2)*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2;
+assign w_addr2 = mode? (i_mac_pixel_pointer/2 + HEIGHT/(2*divisor))*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2 + WIDTH/(2*divisor);
 
 always @ (posedge clk) begin
     if (rst) begin
@@ -125,7 +122,7 @@ always @ (posedge clk) begin
         read <= 1;
     end     
     else if(i_mac_valid) begin
-        case (i_mac_mode)
+        case (mode)
             0: begin 
                 if (i_mac_pixel_pointer == WIDTH/divisor - 2 && i_mac_row_column_pointer == HEIGHT/divisor - 1) begin 
                     mode <= 1;
@@ -197,3 +194,4 @@ mem2(
     );          
           
 endmodule
+
