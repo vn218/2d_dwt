@@ -33,6 +33,7 @@ output reg [$clog2(WIDTH)-1:0] o_mac_row_column_pointer,
 output reg [$clog2(WIDTH)-1:0] o_mac_pixel_pointer,
 output reg [7:0] axi_out,
 output reg axi_valid,
+output reg last_pixel,
 input [$clog2(WIDTH)-1:0] i_mac_row_column_pointer,
 input [$clog2(WIDTH)-1:0] i_mac_pixel_pointer    
     );
@@ -75,13 +76,19 @@ always @ (*) begin
 end
 
 always @ (posedge clk) begin
-    if (rst)
+    if (rst) begin
         pixel_pointer <= 0;
+        last_pixel <= 0;
+    end    
     else if(read) begin
-        if ((mode == 0 && pixel_pointer == WIDTH/divisor - 2)||(mode == 1 && pixel_pointer == HEIGHT/divisor - 2))
-            pixel_pointer <= 0;    
-        else
-            pixel_pointer <= pixel_pointer + 2;         
+        if ((mode == 0 && pixel_pointer == WIDTH/divisor - 2)||(mode == 1 && pixel_pointer == HEIGHT/divisor - 2)) begin
+            pixel_pointer <= 0;
+            last_pixel <= 1;
+        end        
+        else begin
+            pixel_pointer <= pixel_pointer + 2;
+            last_pixel <= 0;
+        end             
     end
 end
 
@@ -194,4 +201,3 @@ mem2(
     );          
           
 endmodule
-
