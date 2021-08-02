@@ -53,6 +53,7 @@ control_logic(
 .o_mac_row_column_pointer(row_column_pointer_to_mac),
 .o_mac_pixel_pointer(pixel_pointer_to_mac),
 .axi_out(axi_out),
+.last_pixel(),
 .axi_valid(axi_valid),
 .i_mac_row_column_pointer(row_column_pointer_from_mac),
 .i_mac_pixel_pointer(pixel_pointer_from_mac)    
