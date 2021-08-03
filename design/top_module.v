@@ -37,7 +37,8 @@ wire valid_from_mac;
 wire [$clog2(WIDTH)-1:0] row_column_pointer_to_mac;
 wire [$clog2(WIDTH)-1:0] pixel_pointer_to_mac;    
 wire [$clog2(WIDTH)-1:0] row_column_pointer_from_mac;
-wire [$clog2(WIDTH)-1:0] pixel_pointer_from_mac;    
+wire [$clog2(WIDTH)-1:0] pixel_pointer_from_mac;
+wire last_pixel;    
 
 control_logic #( 
 .HEIGHT(HEIGHT),
@@ -53,12 +54,12 @@ control_logic(
 .o_mac_row_column_pointer(row_column_pointer_to_mac),
 .o_mac_pixel_pointer(pixel_pointer_to_mac),
 .axi_out(axi_out),
-.last_pixel(),
+.last_pixel(last_pixel),
 .axi_valid(axi_valid),
 .i_mac_row_column_pointer(row_column_pointer_from_mac),
 .i_mac_pixel_pointer(pixel_pointer_from_mac)    
     );
-mac #( 
+mac_d4 #( 
 .HEIGHT(HEIGHT),
 .WIDTH(WIDTH))
 mac(
@@ -67,6 +68,7 @@ mac(
 .pixel_input(pixel_to_mac),
 .pixel_output(pixel_from_mac),
 .i_valid(valid_to_mac),
+.last_pixel(last_pixel),
 .o_valid(valid_from_mac),
 .i_row_column_pointer(row_column_pointer_to_mac),
 .i_pixel_pointer(pixel_pointer_to_mac),
