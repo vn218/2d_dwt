@@ -39,7 +39,7 @@ output reg [$clog2(WIDTH)-1:0] o_pixel_pointer
 reg [$clog2(WIDTH)-1:0] pixel_pointer_buffer [2:0];
 reg [$clog2(WIDTH)-1:0] row_column_pointer_buffer [2:0];
 reg [2:0] valid_buffer;
-reg last_pixel_buffer;
+reg [1:0] last_pixel_buffer;
 reg [31:0] sum_data [1:0];
 
 reg [7:0] pixel [3:0];
@@ -59,16 +59,14 @@ always @ (posedge clk) begin
             pixel[1] <= pixel_input[7:0];
             pixel_pointer_buffer[0] <= i_pixel_pointer;
             row_column_pointer_buffer[0] <= i_row_column_pointer;
-            last_pixel_buffer <= last_pixel;
+            last_pixel_buffer[0] <= last_pixel;
         end
         if (valid_buffer[0]) begin
             pixel[2] <= pixel[0];
             pixel[3] <= pixel[1];
             pixel_pointer_buffer[1] <= pixel_pointer_buffer[0];
             row_column_pointer_buffer[1] <= row_column_pointer_buffer[0];
-            if (last_pixel_buffer) begin
-                pixel[0] <= first_pixels[0];
-                pixel[1] <= first_pixels[1];
+            last_pixel_buffer[1]<= last_pixel_buffer[0];
             end    
         end
         if (valid_buffer[1]) begin
@@ -76,14 +74,28 @@ always @ (posedge clk) begin
                 first_pixels[0] <= pixel[2];
                 first_pixels[1] <= pixel[3];
             end
-            if ( /*sum logic low pass*/) 
-                sum_data[0] <= /*sum*/;
-            else    
-                sum_data[0] <= /*sum*/;
-            if ( /*sum logic high pass*/) 
-                sum_data[1] <= /*sum*/;
-            else    
-                sum_data[1] <= /*sum*/;
+            case (last_pixel_buffer[1])
+            0:  begin
+                if ( /*sum logic low pass*/) 
+                    sum_data[0] <= /*sum*/;
+                else    
+                    sum_data[0] <= /*sum*/;
+                if ( /*sum logic high pass*/) 
+                    sum_data[1] <= /*sum*/;
+                else    
+                    sum_data[1] <= /*sum*/;
+                end
+            1:  begin
+                if ( /*sum logic low pass*/) 
+                    sum_data[0] <= /*sum*/;
+                else    
+                    sum_data[0] <= /*sum*/;
+                if ( /*sum logic high pass*/) 
+                    sum_data[1] <= /*sum*/;
+                else    
+                    sum_data[1] <= /*sum*/;
+                end
+            endcase            
             pixel_pointer_buffer[2] <= pixel_pointer_buffer[1];
             row_column_pointer_buffer[2] <= row_column_pointer_buffer[1];    
         if (valid_buffer[2]) begin
