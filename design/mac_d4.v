@@ -3,7 +3,7 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 03.08.2021 00:24:39
+// Create Date: 03.08.2021 16:17:38
 // Design Name: 
 // Module Name: mac_d4
 // Project Name: 
@@ -27,63 +27,87 @@ module mac_d4
 input clk, rst,
 input [15:0] pixel_input,
 output reg [15:0] pixel_output,
-input last_pixel,
 input i_valid,
+input last_pixel,
 output reg o_valid,
 input [$clog2(WIDTH)-1:0] i_row_column_pointer,
 input [$clog2(WIDTH)-1:0] i_pixel_pointer,
 output reg [$clog2(WIDTH)-1:0] o_row_column_pointer,
 output reg [$clog2(WIDTH)-1:0] o_pixel_pointer
     );
-    
-reg [7:0] pixels[WIDTH-1:0];
-reg valid_buffer;
-integer i;
-reg h0 = 0.4829629131445341;
-reg h1 = 0.8365163037378077;
-reg h2 = 0.2241438680420134;
-reg h3 = 0.1294095225512603;
-    
+
+reg [$clog2(WIDTH)-1:0] pixel_pointer_buffer [2:0];
+reg [$clog2(WIDTH)-1:0] row_column_pointer_buffer [2:0];
+reg [2:0] valid_buffer;
+reg [1:0] last_pixel_buffer;
+reg [31:0] sum_data [1:0];
+reg [20:0] h0, h1, h2, h3;
+
+reg [7:0] pixel [3:0];
+reg [7:0] first_pixels [1:0];
+
+initial begin
+     h0 <= 21'b001111011101000110111;    //20 decimal points
+     h1 <= 21'b011010110001001011111;
+     h2 <= 21'b000111001011000011000;
+     h3 <= 21'b000100001001000010000;
+end
+
 always @ (posedge clk) begin
     if (rst) begin
-        for (i = 0; i < WIDTH; i = i + 1)
-           pixels[i] <= 0;
+        valid_buffer <= 0;
     end
     else begin
+        valid_buffer[0] <= i_valid;
+        valid_buffer[1] <= valid_buffer[0];
+        valid_buffer[2] <= valid_buffer[1];
+        o_valid <= valid_buffer[2];
         if (i_valid) begin
-            if (i_pixel_pointer == 0) begin
-                pixels[0] <= pixel_input[7:0];
-                pixels[1] <= pixel_input[15:8];
-                valid_buffer <= 0;
-            end else if (last_pixel) begin
-                if (h0*pixel_input[7:0] + h1*pixel_input[15:8] + h2*pixels[WIDTH-3] < h3*pixels[WIDTH-4])
-                    pixel_output[15:8] = 0;
-                else
-                    pixel_output[15:8] = h0*pixel_input[7:0] + h1*pixel_input[15:8] + h2*pixels[WIDTH-3] - h3*pixels[WIDTH-4];
-                if (h1*pixels[2] < h3*pixels[0] + h2*pixels[1] + h0*pixels[3])
-                    pixel_output[7:0] = 0;
-                else
-                    pixel_output[7:0] = h1*pixels[WIDTH-3] - h3*pixel_input[7:0] - h2*pixel_input[15:8] - h0*pixels[WIDTH-4];
-            end else begin
-                pixels[0] <= pixel_input[7:0];
-                pixels[1] <= pixel_input[15:8];
-                for (i = 0; i < WIDTH-1; i = i + 1)
-                    pixels[i+1] <= pixels[i];
-                if (h0*pixels[0] + h1*pixels[1] + h2*pixels[2] < h3*pixels[3])
-                    pixel_output[15:8] = 0;
-                else
-                    pixel_output[15:8] = h0*pixels[0] + h1*pixels[1] + h2*pixels[2] - h3*pixels[3];
-                if (h1*pixels[2] < h3*pixels[0] + h2*pixels[1] + h0*pixels[3])
-                    pixel_output[7:0] = 0;
-                else
-                    pixel_output[7:0] = h1*pixels[2] - h3*pixels[0] - h2*pixels[1] - h0*pixels[3];
-                valid_buffer <= i_valid;
-            end
-            o_pixel_pointer <= i_pixel_pointer;
-            o_row_column_pointer <= i_row_column_pointer;
+            pixel[0] <= pixel_input[15:8];
+            pixel[1] <= pixel_input[7:0];
+            pixel_pointer_buffer[0] <= i_pixel_pointer;
+            row_column_pointer_buffer[0] <= i_row_column_pointer;
+            last_pixel_buffer[0] <= last_pixel;
         end
-        o_valid <= i_valid;
-     end
-                   
+        if (valid_buffer[0]) begin
+            pixel[2] <= pixel[0];
+            pixel[3] <= pixel[1];
+            pixel_pointer_buffer[1] <= pixel_pointer_buffer[0];
+            row_column_pointer_buffer[1] <= row_column_pointer_buffer[0];
+            last_pixel_buffer[1]<= last_pixel_buffer[0];
+              
+        end
+        if (valid_buffer[1]) begin
+            if (pixel_pointer_buffer[1] == 0) begin
+                first_pixels[0] <= pixel[2];
+                first_pixels[1] <= pixel[3];
+            end
+            case (last_pixel_buffer[1])
+            0:  begin       
+                  sum_data[0] <= h0*pixel[2] + h1*pixel[3] + h2*pixel[0] - h3*pixel[1];        
+                  sum_data[1] <= h1*pixel[0] - h3*pixel[2] - h2*pixel[3] - h0*pixel[1];
+                end
+            1:  begin
+                  sum_data[0] <= h0*pixel[2] + h1*pixel[3] + h2*first_pixels[0] - h3*first_pixels[1];
+                  sum_data[1] <= h1*first_pixels[0] - h3*pixel[2] - h2*pixel[3] - h0*first_pixels[1];
+                end
+            endcase            
+            pixel_pointer_buffer[2] <= pixel_pointer_buffer[1];
+            row_column_pointer_buffer[2] <= row_column_pointer_buffer[1];
+        end      
+        if (valid_buffer[2]) begin
+            //shift logic and final output            
+            if (sum_data[0][31] == 1)
+                pixel_output[15:8] <= 0;    
+            else
+                pixel_output[15:8] <= (sum_data[0]*5) >> 23;
+            if (sum_data[1][31] == 1)
+                pixel_output[7:0] <= 0;
+            else
+                pixel_output[7:0] <= (sum_data[1]*5) >> 23;    
+            o_pixel_pointer <= pixel_pointer_buffer[2];
+            o_row_column_pointer <= row_column_pointer_buffer[2];
+        end    
+    end            
 end    
 endmodule
