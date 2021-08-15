@@ -5,7 +5,7 @@
 // 
 // Create Date: 31.07.2021 16:37:17
 // Design Name: 
-// Module Name: mac
+// Module Name: mac_haar
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -21,7 +21,7 @@
 
 
 
-module mac
+module mac_haar
 #(parameter HEIGHT = 256,
             WIDTH = 256)
 (
@@ -37,11 +37,11 @@ output reg [$clog2(WIDTH)-1:0] o_pixel_pointer
     );
 always @ (posedge clk) begin
     if (i_valid) begin
-        pixel_output[15:8] <= (pixel_input[15:8] + pixel_input[7:0])/2;
+        pixel_output[15:8] <= (pixel_input[15:8] + pixel_input[7:0])>>1;
         if ( pixel_input[15:8] < pixel_input[7:0])
             pixel_output[7:0] <= 0;
         else
-            pixel_output[7:0] <= (pixel_input[15:8] - pixel_input[7:0])/2;
+            pixel_output[7:0] <= (pixel_input[15:8] - pixel_input[7:0])>>1;
         o_pixel_pointer <= i_pixel_pointer;
         o_row_column_pointer <= i_row_column_pointer;
     end
