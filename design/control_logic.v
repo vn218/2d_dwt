@@ -52,7 +52,7 @@ wire [7:0] mem2_out1;
 wire [7:0] mem2_out2;
 wire [15:0] mem_out;
 
-reg mode;
+reg mode; //0 rowwise  1 columnwise
 reg [$clog2(WIDTH)-1:0] pixel_pointer;
 reg [$clog2(WIDTH)-1:0] row_column_pointer;
 reg read;
@@ -60,7 +60,7 @@ reg [2:0] level;
 reg [7:0] divisor;
 reg axi_valid_buffer;
 
-assign memory_select = mode;
+assign memory_select = mode; 
 assign mem_out = memory_select?{mem2_out1,mem2_out2}:{mem1_out1,mem1_out2};
 assign o_mac = mem_out;
 
@@ -109,7 +109,7 @@ always @ (posedge clk) begin
 end
 
 assign rd_addr1 = mode? pixel_pointer*WIDTH + row_column_pointer : row_column_pointer*WIDTH + pixel_pointer;    
-assign rd_addr2 = mode? (pixel_pointer+1)*WIDTH + row_column_pointer : row_column_pointer*WIDTH + pixel_pointer+1;
+assign rd_addr2 = mode? rd_addr1 + WIDTH : rd_addr1 + 1;
 
 
 always @ (posedge clk) begin
@@ -118,8 +118,8 @@ always @ (posedge clk) begin
     o_mac_valid <= read;
 end
 
-assign w_addr1 = mode? (i_mac_pixel_pointer/2)*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2;
-assign w_addr2 = mode? (i_mac_pixel_pointer/2 + HEIGHT/(2*divisor))*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2 + WIDTH/(2*divisor);
+assign w_addr1 = mode? (i_mac_pixel_pointer >> 1)*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2;
+assign w_addr2 = mode? w_addr1 + (HEIGHT/(2*divisor))*WIDTH : w_addr1+ WIDTH/(2*divisor);
 
 always @ (posedge clk) begin
     if (rst) begin
