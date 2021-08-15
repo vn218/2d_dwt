@@ -57,7 +57,6 @@ reg [$clog2(WIDTH)-1:0] pixel_pointer;
 reg [$clog2(WIDTH)-1:0] row_column_pointer;
 reg read;
 reg [2:0] level;
-reg [7:0] divisor;
 reg axi_valid_buffer;
 
 assign memory_select = mode; 
@@ -81,7 +80,7 @@ always @ (posedge clk) begin
         last_pixel <= 0;
     end    
     else if(read) begin
-        if ((mode == 0 && pixel_pointer == WIDTH/divisor - 2)||(mode == 1 && pixel_pointer == HEIGHT/divisor - 2)) begin
+        if ((mode == 0 && pixel_pointer == (WIDTH >> level) - 2)||(mode == 1 && pixel_pointer == (HEIGHT >> level) - 2)) begin
             pixel_pointer <= 0;
             last_pixel <= 1;
         end        
@@ -96,9 +95,9 @@ always @ (posedge clk) begin
     if (rst)
         row_column_pointer <= 0;
     else if(read) begin
-        if ((mode == 0 && pixel_pointer == WIDTH/divisor - 2)||(mode == 1 && pixel_pointer == HEIGHT/divisor - 2))
+        if ((mode == 0 && pixel_pointer == (WIDTH >> level) - 2)||(mode == 1 && pixel_pointer == (HEIGHT >> level) - 2))
         begin    
-            if ((mode == 0 && row_column_pointer == HEIGHT/divisor - 1)||( mode == 1 && row_column_pointer == WIDTH/divisor-1)) begin
+            if ((mode == 0 && row_column_pointer == (HEIGHT >> level) - 1)||( mode == 1 && row_column_pointer == (WIDTH >> level) -1)) begin
                 row_column_pointer <= 0;
                 read <= 0;    
             end
@@ -119,28 +118,26 @@ always @ (posedge clk) begin
 end
 
 assign w_addr1 = mode? (i_mac_pixel_pointer >> 1)*WIDTH + i_mac_row_column_pointer : i_mac_row_column_pointer*WIDTH + i_mac_pixel_pointer/2;
-assign w_addr2 = mode? w_addr1 + (HEIGHT/(2*divisor))*WIDTH : w_addr1+ WIDTH/(2*divisor);
+assign w_addr2 = mode? w_addr1 + (HEIGHT >> (level + 1))*WIDTH : w_addr1+ (WIDTH >> (level + 1));
 
 always @ (posedge clk) begin
     if (rst) begin
         mode <= 0;
         level <= 0;
-        divisor <= 1;
         read <= 1;
     end     
     else if(i_mac_valid) begin
         case (mode)
             0: begin 
-                if (i_mac_pixel_pointer == WIDTH/divisor - 2 && i_mac_row_column_pointer == HEIGHT/divisor - 1) begin 
+                if (i_mac_pixel_pointer == (WIDTH >> level) - 2 && i_mac_row_column_pointer == (HEIGHT >> level) - 1) begin 
                     mode <= 1;
                     read <= 1;
                 end
                 end    
                 1: begin 
-                if (i_mac_pixel_pointer == HEIGHT/divisor - 2 && i_mac_row_column_pointer == WIDTH/divisor -1) begin 
+                if (i_mac_pixel_pointer == (HEIGHT >> level) - 2 && i_mac_row_column_pointer == (WIDTH >> level) -1) begin 
                     mode <= 0;
                     level <= level + 1;
-                    divisor <= divisor*2;
                     if ( level < DECOMPOSITION_LEVEL - 1 ) read <= 1;                    
                 end
                 end    
